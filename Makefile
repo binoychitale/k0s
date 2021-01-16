@@ -54,6 +54,8 @@ k0s: pkg/assets/zz_generated_offsets_linux.go
 k0s.exe: TARGET_OS = windows
 k0s.exe: pkg/assets/zz_generated_offsets_windows.go
 
+k0s.exe k0s: static/gen_manifests.go
+
 k0s.exe k0s: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=$(TARGET_OS) GOARCH=$(GOARCH) go build -ldflags='-w -s -X github.com/k0sproject/k0s/pkg/build.Version=$(VERSION) -X "github.com/k0sproject/k0s/pkg/build.EulaNotice=$(EULA_NOTICE)" -X github.com/k0sproject/k0s/pkg/telemetry.segmentToken=$(SEGMENT_TOKEN)' \
 		    -o $@.code main.go
@@ -81,15 +83,14 @@ check-unit: pkg/assets/zz_generated_offsets_$(TARGET_OS).go
 
 .PHONY: clean
 clean:
-	rm -f pkg/assets/zz_generated_offsets_*.go k0s k0s.exe .bins.*stamp bindata*
+	rm -f pkg/assets/zz_generated_offsets_*.go k0s k0s.exe .bins.*stamp bindata* static/gen_manifests.go
 	$(MAKE) -C embedded-bins clean
 
 .PHONY: manifests
 manifests:
 	controller-gen crd paths="./..." output:crd:artifacts:config=static/manifests/helm/CustomResourceDefinition object
 
-.PHONY: bindata-manifests
-bindata-manifests:
+static/gen_manifests.go:
 	go-bindata -o static/gen_manifests.go -pkg static -prefix static static/...
 
 .PHONY: generate-bindata
